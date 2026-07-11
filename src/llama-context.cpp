@@ -2071,7 +2071,20 @@ int llama_context::decode_split(
                 return -3;
             }
 
-            ggml_backend_tensor_get(t_hidden, hidden.data(), 0, hidden.size() * sizeof(float));
+            ggml_backend_t backend_hidden =
+                    ggml_backend_sched_get_tensor_backend(sched.get(), t_hidden);
+            GGML_ASSERT(backend_hidden != nullptr);
+
+            // Graph execution is asynchronous on the backend stream. Queue the
+            // D2H copy on that same stream, then wait before the next segment
+            // consumes the host-side activation.
+            ggml_backend_tensor_get_async(
+                    backend_hidden,
+                    t_hidden,
+                    hidden.data(),
+                    0,
+                    hidden.size() * sizeof(float));
+            ggml_backend_synchronize(backend_hidden);
         } else {
             auto * t_logits = res->get_logits();
             if (!t_logits || !logits.data || n_outputs <= 0) {
