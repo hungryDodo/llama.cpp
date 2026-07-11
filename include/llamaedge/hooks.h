@@ -33,6 +33,30 @@ extern "C" {
 struct llama_context;
 struct llama_batch;
 
+typedef int (*llamaedge_split_segment_callback)(
+    void * user_data,
+    uint32_t segment_index,
+    uint32_t layer_begin,
+    uint32_t layer_end,
+    bool before_segment);
+
+// Execute one decoder batch as contiguous transformer-layer segments. This
+// prototype API is intentionally limited to architectures with validated
+// split-graph builders; callers must provide strictly increasing layer ends
+// whose final value is the model layer count.
+LLAMA_API int llamaedge_decode_split_graph(
+    struct llama_context * ctx,
+    const struct llama_batch * batch,
+    const uint32_t * layer_ends,
+    uint32_t n_segments);
+LLAMA_API int llamaedge_decode_split_graph_with_callback(
+    struct llama_context * ctx,
+    const struct llama_batch * batch,
+    const uint32_t * layer_ends,
+    uint32_t n_segments,
+    llamaedge_split_segment_callback callback,
+    void * user_data);
+
 // ============================================================
 // Hook infrastructure flags
 // ============================================================

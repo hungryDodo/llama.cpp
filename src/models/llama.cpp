@@ -26,9 +26,11 @@ llm_build_llama<embed>::llm_build_llama(const llama_model & model, const llm_gra
 
     const float kq_scale = hparams.f_attention_scale == 0.0f ? 1.0f/sqrtf(float(n_embd_head)) : hparams.f_attention_scale;
 
-    ggml_tensor * inp_out_ids = build_inp_out_ids();
+    ggml_tensor * inp_out_ids = layer_end == n_layer ? build_inp_out_ids() : nullptr;
 
-    for (int il = 0; il < n_layer; ++il) {
+    GGML_ASSERT(layer_begin < layer_end && layer_end <= n_layer);
+
+    for (int il = layer_begin; il < layer_end; ++il) {
         ggml_tensor * inpSA = inpL;
 
         // norm
@@ -133,6 +135,13 @@ llm_build_llama<embed>::llm_build_llama(const llama_model & model, const llm_gra
         inpL = cur;
     }
     cur = inpL;
+
+    if (layer_end < n_layer) {
+        res->t_embd = cur;
+        cb(cur, "partial_result_embd", layer_end - 1);
+        ggml_build_forward_expand(gf, cur);
+        return;
+    }
 
     cur = build_norm(cur,
             model.output_norm, NULL,

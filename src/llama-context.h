@@ -23,6 +23,13 @@ class llama_io_write_i;
 struct llama_memory_i;
 struct llama_memory_context_i;
 
+using llama_split_segment_callback = int (*)(
+        void * user_data,
+        uint32_t segment_index,
+        uint32_t layer_begin,
+        uint32_t layer_end,
+        bool before_segment);
+
 struct llama_context {
     // init scheduler and compute buffers, reserve worst-case graphs
     llama_context(
@@ -114,10 +121,19 @@ struct llama_context {
                 const llama_ubatch & ubatch,
                     llm_graph_type   gtype,
             llama_memory_context_i * mctx,
-                       ggml_status & ret);
+                       ggml_status & ret,
+                           int32_t   layer_begin = 0,
+                           int32_t   layer_end = -1,
+                              bool   apply_memory = true);
 
     int encode(const llama_batch & batch_inp);
     int decode(const llama_batch & batch_inp);
+    int decode_split(
+            const llama_batch & batch_inp,
+            const uint32_t * layer_ends,
+            uint32_t n_segments,
+            llama_split_segment_callback callback = nullptr,
+            void * callback_user_data = nullptr);
 
     //
     // state save/load
@@ -231,7 +247,9 @@ private:
                         llm_graph_result * res,
                       const llama_ubatch & ubatch,
             const llama_memory_context_i * mctx,
-                          llm_graph_type   gtype) const;
+                          llm_graph_type   gtype,
+                                int32_t   layer_begin = 0,
+                                int32_t   layer_end = -1) const;
 
     llm_graph_cb graph_get_cb() const;
 

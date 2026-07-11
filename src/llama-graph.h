@@ -564,6 +564,9 @@ struct llm_graph_params {
 
     uint32_t n_outputs;
 
+    uint32_t layer_begin;
+    uint32_t layer_end;
+
     llm_graph_cb cb;
 
     llm_graph_result * res;
@@ -602,6 +605,10 @@ struct llm_graph_params {
         }
 
         if (n_outputs != other.n_outputs) {
+            return false;
+        }
+
+        if (layer_begin != other.layer_begin || layer_end != other.layer_end) {
             return false;
         }
 
@@ -723,6 +730,8 @@ struct llm_graph_context {
 
     const int64_t n_embd;
     const int64_t n_layer;
+    const int64_t layer_begin;
+    const int64_t layer_end;
     const int64_t n_rot;
     const int64_t n_ctx;       // user-specified context size (can be different from n_ctx_train)
     const int64_t n_head;
