@@ -38,15 +38,6 @@ add_library(llama
             unicode-data.cpp
             unicode.cpp
             unicode.h
-            llamaedge-hooks.cpp
-            llamaedge-tx-ring.cpp
-            llamaedge-kv-export.cpp
-            llamaedge-frontier.cpp
-            llamaedge-wire-format.cpp
-            llamaedge-thinning.cpp
-            llamaedge-quant.cpp
-            llamaedge-profile.cpp
-            llamaedge-b4-pipeline.cpp
             ${LLAMA_MODELS_SOURCES}
             )
 
@@ -58,14 +49,7 @@ set_target_properties(llama PROPERTIES
 
 target_include_directories(llama PRIVATE .)
 target_include_directories(llama PUBLIC ../include)
-target_include_directories(llama PUBLIC ../include/llamaedge)
 target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
-
-# EdgeWeaver hook support
-option(LLAMAEDGE_ENABLE_HOOKS "llama: enable EdgeWeaver PD hooks" OFF)
-if(LLAMAEDGE_ENABLE_HOOKS)
-    target_compile_definitions(llama PUBLIC LLAMAEDGE_ENABLE_HOOKS)
-endif()
 
 # EdgeWeaver per-layer KV export helper
 option(LLAMAEDGE_ENABLE_KV_LAYER_EXPORT "llama: enable per-layer KV export helper" OFF)

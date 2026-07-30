@@ -1,10 +1,4 @@
 find_package(Git)
-if(NOT Git_FOUND OR NOT EXISTS "${CMAKE_SOURCE_DIR}/.git")
-    set(GIT_SHA1 "unknown")
-    set(GIT_DATE "unknown")
-    set(GIT_COMMIT_SUBJECT "source archive")
-    return()
-endif()
 
 # the commit's SHA1
 execute_process(COMMAND

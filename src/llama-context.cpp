@@ -11,7 +11,6 @@
 #include "llama-ext.h"
 #include "llama.h"
 #include "llama-kv-cache.h"
-#include "llamaedge/hooks.h"
 
 #include <cinttypes>
 #include <cmath>
@@ -1929,13 +1928,13 @@ int llama_context::decode_split(
     }
 
     if (batch_inp.n_tokens == 0 || static_cast<uint32_t>(batch_inp.n_tokens) > cparams.n_ubatch) {
-        LLAMA_LOG_ERROR("%s: prototype requires 0 < n_tokens <= n_ubatch (%d > %u)\n",
+        LLAMA_LOG_ERROR("%s: split-graph decode requires 0 < n_tokens <= n_ubatch (%d > %u)\n",
                 __func__, batch_inp.n_tokens, cparams.n_ubatch);
         return -1;
     }
 
     if (cparams.embeddings || !sampling.samplers.empty()) {
-        LLAMA_LOG_ERROR("%s: embeddings and backend samplers are outside the prototype scope\n", __func__);
+        LLAMA_LOG_ERROR("%s: split-graph decode does not support embeddings or backend samplers\n", __func__);
         return -1;
     }
 
@@ -2114,7 +2113,7 @@ int llama_context::decode_split(
     }
 
     if (mctx->next()) {
-        LLAMA_LOG_ERROR("%s: prototype does not support a memory-split batch\n", __func__);
+        LLAMA_LOG_ERROR("%s: split-graph decode does not support a memory-split batch\n", __func__);
         return -1;
     }
 

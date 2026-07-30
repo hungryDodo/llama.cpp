@@ -774,22 +774,3 @@ size_t llamaedge_kv_layer_import_v_range(
 }
 
 #endif // LLAMAEDGE_ENABLE_KV_LAYER_IMPORT
-
-void llamaedge_kv_cell_diag(struct llama_context * ctx, int32_t seq_id) {
-#ifdef LLAMAEDGE_ENABLE_KV_LAYER_IMPORT
-    if (!ctx) {
-        fprintf(stderr, "[C8.2-cell-diag] null llama_context\n");
-        return;
-    }
-    auto * memory = ctx->get_memory();
-    auto * kv = dynamic_cast<llama_kv_cache *>(memory);
-    if (!kv) {
-        fprintf(stderr, "[C8.2-cell-diag] KV cache not available\n");
-        return;
-    }
-    kv->cell_diag(seq_id);
-#else
-    (void)ctx; (void)seq_id;
-    fprintf(stderr, "[C8.2-cell-diag] G3 import not enabled in this build\n");
-#endif
-}

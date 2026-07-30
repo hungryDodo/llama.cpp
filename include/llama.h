@@ -957,13 +957,6 @@ extern "C" {
                     size_t         dst_size);
 #endif
 
-    // Diagnostic: dump KV cache cell state for a given sequence to stderr.
-    // Available in export-only builds too; without import support it reports
-    // that native import diagnostics are disabled.
-    LLAMA_API void llamaedge_kv_cell_diag(
-            struct llama_context * ctx,
-                    int32_t        seq_id);
-
 #ifdef LLAMAEDGE_ENABLE_KV_LAYER_IMPORT
     //
     // per-layer KV import helper
@@ -1083,6 +1076,31 @@ extern "C" {
     LLAMA_API int32_t llama_decode(
             struct llama_context * ctx,
               struct llama_batch   batch);
+
+    typedef int (*llamaedge_split_segment_callback)(
+        void * user_data,
+        uint32_t segment_index,
+        uint32_t layer_begin,
+        uint32_t layer_end,
+        bool before_segment);
+
+    // Execute one decoder batch as contiguous transformer-layer segments.
+    // This API is restricted to architectures with validated split-graph
+    // builders. Layer ends must be strictly increasing and the final value
+    // must equal the model layer count.
+    LLAMA_API int llamaedge_decode_split_graph(
+            struct llama_context * ctx,
+            const struct llama_batch * batch,
+            const uint32_t * layer_ends,
+            uint32_t n_segments);
+
+    LLAMA_API int llamaedge_decode_split_graph_with_callback(
+            struct llama_context * ctx,
+            const struct llama_batch * batch,
+            const uint32_t * layer_ends,
+            uint32_t n_segments,
+            llamaedge_split_segment_callback callback,
+            void * user_data);
 
     // Set the number of threads used for decoding
     // n_threads is the number of threads used for generation (single token)

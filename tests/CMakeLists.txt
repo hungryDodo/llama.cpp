@@ -297,9 +297,6 @@ target_include_directories(test-alloc PRIVATE ${PROJECT_SOURCE_DIR}/ggml/src)
 # Token chunk range export/import tests
 llama_build(test_token_chunk.cpp)
 
-# B3 chunk streaming tests - TX ring, payload pool, frontier, warm threshold
-llama_build(test-b3-chunk-streaming.cpp)
-
 llama_build(export-graph-ops.cpp)
 target_include_directories(export-graph-ops PRIVATE ${PROJECT_SOURCE_DIR}/ggml/src)
 if (TARGET gguf-model-data)

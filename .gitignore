@@ -147,4 +147,3 @@ poetry.toml
 a.out.*
 
 AGENTS.local.md
-license.cpp

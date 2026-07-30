@@ -302,8 +302,6 @@ public:
     void set_input_k_rot(ggml_tensor * dst) const;
     void set_input_v_rot(ggml_tensor * dst) const;
 
-    void cell_diag(llama_seq_id seq_id) const;
-
 private:
     const llama_model & model;
     const llama_hparams & hparams;

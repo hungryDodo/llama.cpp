@@ -1641,34 +1641,6 @@ void llama_kv_cache::set_input_kq_mask(ggml_tensor * dst, const llama_ubatch * u
         set_input_kq_mask_impl<false>(args, data);
     }
 
-    // EdgeWeaver diagnostic: optional kq_mask dump controlled by EDGEWEAVER_KQ_MASK_DIAG=1
-    if (getenv("EDGEWEAVER_KQ_MASK_DIAG")) {
-        for (int ii = 0; ii < n_tokens; ++ii) {
-            int64_t unmasked = 0, empty_ct = 0, seq_mismatch = 0, future_ct = 0;
-            int64_t total = n_kv;
-            float max_val = -INFINITY;
-            for (int64_t j = 0; j < n_kv; ++j) {
-                float v = data[ii * n_kv + j];
-                if (v > max_val) max_val = v;
-                if (v > -1e6f) unmasked++;
-            }
-            // Re-scan with seq_id to determine reasons
-            const llama_seq_id seq_id = ubatch->seq_id[ii][0];
-            const auto & cells = v_cells[seq_to_stream[seq_id]];
-            const llama_pos p1 = ubatch->pos[ii];
-            for (int64_t j = 0; j < (int64_t)cells.size() && j < n_kv; ++j) {
-                if (cells.is_empty(j)) { empty_ct++; continue; }
-                if (!cells.seq_has(j, seq_id)) { seq_mismatch++; continue; }
-                llama_pos p0 = cells.pos_get(j);
-                if (causal_attn && p0 > p1) { future_ct++; continue; }
-            }
-            fprintf(stderr, "[C8.2-kq-mask] token[%d] seq=%d pos=%d n_kv=%ld "
-                    "unmasked=%ld max_val=%.4f empty=%ld seq_mismatch=%ld future=%ld\n",
-                    ii, (int)seq_id, (int)p1, total,
-                    unmasked, max_val, empty_ct, seq_mismatch, future_ct);
-        }
-    }
-
     //const int64_t t_end = ggml_time_us();
 
     //LLAMA_LOG_ERROR("%s: kq mask time: %0.3f ms\n", __func__, (t_end - t_start)/1000.0);
@@ -3163,35 +3135,6 @@ size_t llama_kv_cache::layer_import_v_range(
     }
 
     return offset;
-}
-
-void llama_kv_cache::cell_diag(llama_seq_id seq_id) const {
-    if (seq_id < 0 || (size_t)seq_id >= seq_to_stream.size()) {
-        fprintf(stderr, "[C8.2-cell-diag] invalid seq_id=%d\n", (int)seq_id);
-        return;
-    }
-    const uint32_t strm = seq_to_stream[seq_id];
-    const auto & cells = v_cells[strm];
-
-    fprintf(stderr, "[C8.2-cell-diag] seq_id=%d stream=%u n_cells=%u used=%u used_max_p1=%u\n",
-            (int)seq_id, strm, (uint32_t)cells.size(),
-            cells.get_used(), cells.used_max_p1());
-
-    uint32_t n_occupied = 0, n_seq_match = 0;
-    for (uint32_t i = 0; i < cells.size() && n_occupied < 32; ++i) {
-        if (!cells.is_empty(i)) {
-            n_occupied++;
-            bool has_seq = cells.seq_has(i, seq_id);
-            if (has_seq) n_seq_match++;
-            if (n_occupied <= 16) {
-                llama_pos p = cells.pos_get(i);
-                fprintf(stderr, "[C8.2-cell-diag]   cell[%u] pos=%d seq_has(%d)=%s\n",
-                        i, (int)p, (int)seq_id, has_seq ? "true" : "false");
-            }
-        }
-    }
-    fprintf(stderr, "[C8.2-cell-diag] occupied=%u seq_match=%u (first 32 non-empty scanned)\n",
-            n_occupied, n_seq_match);
 }
 
 #endif // LLAMAEDGE_ENABLE_KV_LAYER_IMPORT
