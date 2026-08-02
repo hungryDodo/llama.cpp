@@ -63,6 +63,18 @@ if(LLAMAEDGE_ENABLE_KV_LAYER_IMPORT)
     target_compile_definitions(llama PUBLIC LLAMAEDGE_ENABLE_KV_LAYER_IMPORT)
 endif()
 
+if(LLAMAEDGE_ENABLE_KV_LAYER_EXPORT OR LLAMAEDGE_ENABLE_KV_LAYER_IMPORT)
+    target_sources(llama PRIVATE
+        llama-edgeweaver-kv.cpp
+        llama-edgeweaver-kv-api.cpp)
+endif()
+
+option(LLAMAEDGE_ENABLE_SPLIT_GRAPH "llama: enable EdgeWeaver split-graph decode helper" OFF)
+if(LLAMAEDGE_ENABLE_SPLIT_GRAPH)
+    target_compile_definitions(llama PUBLIC LLAMAEDGE_ENABLE_SPLIT_GRAPH)
+    target_sources(llama PRIVATE llama-edgeweaver-split.cpp)
+endif()
+
 target_link_libraries(llama PUBLIC ggml)
 
 if (BUILD_SHARED_LIBS)

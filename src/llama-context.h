@@ -23,12 +23,14 @@ class llama_io_write_i;
 struct llama_memory_i;
 struct llama_memory_context_i;
 
+#ifdef LLAMAEDGE_ENABLE_SPLIT_GRAPH
 using llama_split_segment_callback = int (*)(
         void * user_data,
         uint32_t segment_index,
         uint32_t layer_begin,
         uint32_t layer_end,
         bool before_segment);
+#endif
 
 struct llama_context {
     // init scheduler and compute buffers, reserve worst-case graphs
@@ -128,12 +130,14 @@ struct llama_context {
 
     int encode(const llama_batch & batch_inp);
     int decode(const llama_batch & batch_inp);
+#ifdef LLAMAEDGE_ENABLE_SPLIT_GRAPH
     int decode_split(
             const llama_batch & batch_inp,
             const uint32_t * layer_ends,
             uint32_t n_segments,
             llama_split_segment_callback callback = nullptr,
             void * callback_user_data = nullptr);
+#endif
 
     //
     // state save/load
@@ -146,8 +150,6 @@ struct llama_context {
     size_t state_seq_get_size(llama_seq_id seq_id, llama_state_seq_flags flags);
     size_t state_seq_get_data(llama_seq_id seq_id,       uint8_t * dst, size_t size, llama_state_seq_flags flags);
     size_t state_seq_set_data(llama_seq_id seq_id, const uint8_t * src, size_t size, llama_state_seq_flags flags);
-
-    size_t state_seq_get_data_range(llama_seq_id seq_id, uint8_t * dst, size_t size, llama_state_seq_flags flags, llama_pos p0, llama_pos p1);
 
     bool state_load_file(
             const char * filepath,
